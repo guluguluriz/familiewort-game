@@ -10,8 +10,9 @@
             --german-black: #222;
             --german-red: #DD0000;
             --german-gold: #FFCE00;
-            /* Ubah transparansi di sini. Semakin kecil angkanya (misal 0.85), semakin transparan */
-            --bg-overlay: rgba(255, 255, 255, 0.92); 
+            /* REVISI: Transparansi dikurangi drastis (dari 0.9 menjadi 0.2) agar background terlihat */
+            --bg-overlay: rgba(255, 255, 255, 0.2); 
+            --glass-border: rgba(255, 255, 255, 0.5);
         }
 
         body {
@@ -19,77 +20,72 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            /* Ubah background body menjadi warna solid netral */
-            background-color: #f0f2f5; 
+            /* Background luar untuk layar desktop (opsional) */
+            background-color: #333; 
             min-height: 100vh;
-            /* Hapus overflow:hidden agar bisa discroll di Google Sites */
         }
 
         /* --- KONTAINER UTAMA (Layar HP) --- */
         .container {
             width: 100%;
-            /* Hapus height: 100vh agar tingginya menyesuaikan konten */
-            min-height: 100vh; /* Minimal setinggi layar */
+            min-height: 100vh;
             max-width: 480px; 
             
-            /* SETTING BACKGROUND DIPINDAH KE SINI */
-            background-color: #fff; /* Warna dasar jika gambar belum muat */
-            background-position: center top; /* Fokus gambar di tengah atas */
+            /* Background Image diatur di sini oleh JS */
+            background-position: center center;
             background-repeat: no-repeat;
-            background-size: cover; /* Gambar memenuhi kontainer */
-            /* Transisi halus saat ganti background */
+            background-size: cover;
             transition: background-image 0.5s ease-in-out;
             
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); /* Bayangan lebih halus */
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* --- LAPISAN TRANSPARAN DI ATAS GAMBAR --- */
-        /* Kita gunakan pseudo-element ::before untuk membuat lapisan putih */
+        /* --- LAPISAN KACA (Overlay) --- */
         .container::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-overlay); /* Warna putih transparan */
-            backdrop-filter: blur(0px); /* Hapus blur jika membuat berat */
-            z-index: 0; /* Berada di belakang konten */
+            
+            /* Warna putih sangat tipis */
+            background: var(--bg-overlay); 
+            
+            /* Efek Blur agar teks terbaca walau background ramai */
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            
+            z-index: 0;
         }
 
-        /* --- KELAS BACKGROUND (Dikendalikan JS) --- */
-        /* Gambar harus ada di folder assets/img/ */
-        .bg-style-menu {
-            background-image: url('assets/img/bg-menu.jpg');
-        }
+        /* KELAS BACKGROUND (Gambar Wajib ada di assets/img/) */
+        .bg-style-menu { background-image: url('assets/img/bg-menu.jpg'); }
+        .bg-style-game { background-image: url('assets/img/bg-game.jpg'); }
 
-        .bg-style-game {
-            background-image: url('assets/img/bg-game.jpg');
-        }
-
-        /* --- KONTEN AGAR DI DEPAN LAPISAN --- */
+        /* Agar konten berada di atas lapisan kaca */
         .header-controls, .content-wrapper, .article-popup {
             position: relative;
-            z-index: 1; /* Berada di depan lapisan ::before */
+            z-index: 1;
         }
 
         /* --- HEADER --- */
         .header-controls {
             width: 100%; height: 60px; padding: 0 15px; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center;
-            /* Ubah background header jadi transparan agar menyatu */
-            background: rgba(255,255,255,0.5); 
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            /* Header semi-transparan */
+            background: rgba(255,255,255,0.7); 
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(255,255,255,0.5);
             flex-shrink: 0;
         }
         .btn-icon { background: none; border: none; font-size: 1.4em; cursor: pointer; }
-        .user-info { font-size: 0.9em; font-weight: bold; color: #444; display: flex; align-items: center; gap: 5px; }
-        .score-badge { background: var(--german-gold); color: #222; padding: 2px 8px; border-radius: 10px; font-size: 0.9em; }
+        .user-info { font-size: 0.9em; font-weight: bold; color: #222; display: flex; align-items: center; gap: 5px; text-shadow: 0 0 10px white; }
+        .score-badge { background: var(--german-gold); color: #222; padding: 2px 8px; border-radius: 10px; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .content-wrapper {
             width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
-            display: flex; flex-direction: column; 
-            /* Hapus overflow-y: auto karena scroll ditangani oleh body/iframe */
+            display: flex; flex-direction: column;
         }
 
         /* --- SCREENS --- */
@@ -97,70 +93,101 @@
         .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TOMBOL --- */
+        /* --- TOMBOL (Dibuat Solid agar kontras) --- */
         .btn {
             display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px;
-            font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
+            font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.4);
         }
         .btn:active { transform: scale(0.95); }
         .btn-story { background: var(--german-gold); color: var(--german-black); }
         .btn-free { background: var(--german-black); color: white; }
         .btn-next { background: #28a745; color: white; }
-        .btn-back { background: #f0f0f0; color: #333; }
-        .btn-locked { background-color: #e9ecef; color: #adb5bd; cursor: not-allowed; }
+        .btn-back { background: #f8f9fa; color: #333; }
+        .btn-locked { background-color: rgba(200,200,200,0.8); color: #666; cursor: not-allowed; }
         .btn-danger { background: #dc3545; color: white; font-size: 0.9em; padding: 10px; width: auto; display: inline-block; }
 
-        /* --- FORM LOGIN --- */
+        /* --- FORM LOGIN (Dibuat semi-solid agar mudah dibaca) --- */
+        #screen-login h1, #screen-menu h1 {
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8); /* Shadow putih agar teks hitam terbaca di bg gelap */
+        }
+        
         .form-group { margin-bottom: 15px; text-align: left; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #222; text-shadow: 0 0 5px white; }
         .form-input {
-            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px;
-            box-sizing: border-box; font-size: 1em; transition: 0.3s; background: rgba(255,255,255,0.8);
+            width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.5); border-radius: 10px;
+            box-sizing: border-box; font-size: 1em; transition: 0.3s;
+            /* Input putih agak transparan */
+            background: rgba(255,255,255,0.85); 
         }
         .form-input:focus { border-color: var(--german-gold); outline: none; background: #fff; }
-        .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; }
+        .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; }
 
         /* --- LEADERBOARD --- */
         .leaderboard-table {
-            width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(255,255,255,0.8); border-radius: 10px; overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            width: 100%; border-collapse: collapse; margin-top: 10px; 
+            /* Tabel semi transparan */
+            background: rgba(255,255,255,0.85); 
+            border-radius: 10px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .leaderboard-table th { background: var(--german-black); color: white; padding: 12px; text-align: left; }
-        .leaderboard-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .rank-1 { background-color: rgba(255, 215, 0, 0.3); font-weight: bold; }
-        .rank-2 { background-color: rgba(192, 192, 192, 0.3); font-weight: bold; } 
-        .rank-3 { background-color: rgba(205, 127, 50, 0.3); font-weight: bold; }
+        .leaderboard-table td { padding: 12px; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .rank-1 { background-color: rgba(255, 215, 0, 0.4); }
+        .rank-2 { background-color: rgba(192, 192, 192, 0.4); } 
+        .rank-3 { background-color: rgba(205, 127, 50, 0.4); }
 
-        /* --- GAMEPLAY ASSETS --- */
+        /* --- CHAT BUBBLES --- */
         #story-dialog-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; animation: popIn 0.3s; }
         .row-right { flex-direction: row-reverse; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; background: #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .chat-bubble { max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .bubble-left { background-color: #ffffff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
-        .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; }
-        .speaker-name { font-size: 0.75em; margin-bottom: 4px; font-weight: bold; color: #666; display: block; }
-        .story-controls { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 3px solid white; background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+        
+        .chat-bubble { 
+            max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; 
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1); 
+        }
+        .bubble-left { background-color: rgba(255,255,255,0.95); border-bottom-left-radius: 4px; color: #333; }
+        .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+        .speaker-name { font-size: 0.75em; margin-bottom: 4px; font-weight: bold; color: #444; display: block; }
+        
+        .story-controls { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
         @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        /* --- SCRAMBLE & POPUP --- */
-        .clue-image { width: 90px; height: 90px; background: rgba(255,255,255,0.8); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 40px; border: 4px solid var(--german-gold); }
+        /* --- GAMEPLAY ASSETS --- */
+        .clue-image { 
+            width: 100px; height: 100px; 
+            background: rgba(255,255,255,0.9); /* Kotak clue putih solid */
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; font-size: 45px; border: 5px solid var(--german-gold); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
         .slot-container { display: flex; justify-content: center; gap: 8px; margin: 25px 0; flex-wrap: wrap; }
-        .letter-box { width: 42px; height: 42px; border-bottom: 3px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; cursor: pointer; background: rgba(255,255,255,0.8); }
-        .letter-box.filled { border-bottom: 3px solid var(--german-black); color: var(--german-black); background: #fff; }
+        
+        .letter-box { 
+            width: 45px; height: 45px; border-bottom: 3px solid #555; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.4em; font-weight: bold; cursor: pointer; 
+            background: rgba(255,255,255,0.9); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .letter-box.filled { border: 2px solid var(--german-black); color: var(--german-black); background: #fff; transform: translateY(-2px); }
+        
         .letter-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
-        .letter-btn { width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 10px; color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; box-shadow: 0 3px 0 #e6b800; }
-        .letter-btn:active { transform: translateY(3px); box-shadow: none; }
+        .letter-btn { 
+            width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 12px; 
+            color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; 
+            box-shadow: 0 4px 0 #e6b800; 
+        }
+        .letter-btn:active { transform: translateY(4px); box-shadow: none; }
         
         .article-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
-        .btn-article { padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; width: 100%; margin: 5px 0; }
+        .btn-article { padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; width: 100%; margin: 5px 0; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .btn-article:active { transform: translateY(4px); box-shadow: none; }
         .der { background-color: #0099ff; } .die { background-color: #ff3366; } .das { background-color: #33cc33; }
         
-        .feedback { margin-top: 15px; font-weight: bold; height: 20px; }
-        .correct { color: #28a745; } .wrong { color: #dc3545; }
-        .big-score { font-size: 4em; font-weight: bold; color: var(--german-black); margin: 10px 0; }
-        .stars { font-size: 2.5em; margin-bottom: 10px; }
+        .feedback { margin-top: 15px; font-weight: bold; height: 20px; text-shadow: 0 0 5px white; }
+        .correct { color: #006400; } .wrong { color: #8B0000; }
+        .big-score { font-size: 4em; font-weight: bold; color: var(--german-black); margin: 10px 0; text-shadow: 2px 2px 0 white; }
+        .stars { font-size: 2.5em; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body class=""> 
@@ -179,7 +206,7 @@
         <div id="screen-login" class="screen active" style="text-align: center;">
             <div style="font-size: 4em; margin-bottom: 10px;">🇩🇪</div>
             <h1>Familienwort</h1>
-            <p style="color:#666; margin-bottom:30px;">Login untuk menyimpan skor!</p>
+            <p style="color:#333; font-weight:bold; margin-bottom:30px; text-shadow:0 0 10px white;">Login untuk menyimpan skor!</p>
             <div class="form-group">
                 <label class="form-label">Username</label>
                 <input type="text" id="login-user" class="form-input" placeholder="Nama Anda...">
@@ -191,7 +218,7 @@
             <p id="login-error" class="error-msg">Username/Password salah!</p>
             <button class="btn btn-free" onclick="handleLogin()">Masuk (Login)</button>
             <button class="btn btn-story" onclick="handleRegister()">Daftar Baru</button>
-            <p style="font-size:0.8em; color:#888; margin-top:20px;">*Data tersimpan di perangkat ini (LocalStorage).</p>
+            <p style="font-size:0.8em; color:#333; background:rgba(255,255,255,0.6); padding:5px; border-radius:5px; margin-top:20px;">*Data tersimpan di perangkat ini (LocalStorage).</p>
         </div>
 
         <div id="screen-menu" class="screen" style="text-align: center; padding-top: 20px;">
@@ -206,8 +233,8 @@
         </div>
 
         <div id="screen-leaderboard" class="screen">
-            <h2 style="text-align:center;">🏆 Papan Peringkat</h2>
-            <p style="text-align:center; font-size:0.9em; color:#666;">Top Skor Tertinggi</p>
+            <h2 style="text-align:center; text-shadow:0 0 5px white;">🏆 Papan Peringkat</h2>
+            <p style="text-align:center; font-size:0.9em; color:#333; font-weight:bold;">Top Skor Tertinggi</p>
             <table class="leaderboard-table">
                 <thead><tr><th style="width:15%">#</th><th>Nama</th><th style="text-align:right">Total XP</th></tr></thead>
                 <tbody id="leaderboard-body"></tbody>
@@ -216,7 +243,7 @@
         </div>
 
         <div id="screen-levels" class="screen" style="text-align: center;">
-            <h2>Pilih Level</h2>
+            <h2 style="text-shadow:0 0 5px white;">Pilih Level</h2>
             <div id="level-buttons-container" style="margin-top: 20px;"></div>
         </div>
 
@@ -229,21 +256,21 @@
 
         <div id="screen-game" class="screen" style="text-align: center;">
             <div class="clue-image" id="clue-icon">🇩🇪</div>
-            <p id="clue-text" style="font-weight:bold; font-size: 1.1em; color:#555;">Clue</p>
+            <p id="clue-text" style="font-weight:bold; font-size: 1.1em; color:#333; background:rgba(255,255,255,0.7); display:inline-block; padding:5px 10px; border-radius:10px;">Clue</p>
             <div class="slot-container" id="slots"></div>
             <div class="feedback" id="feedback-msg"></div>
             <div class="letter-pool" id="pool"></div>
             <div style="margin-top: 40px;">
-                <button onclick="playSound('click'); useHint()" style="background:none; border:2px solid #666; padding:8px 15px; border-radius:20px; font-weight:bold; color:#444;">💡 Hint (-10 Poin)</button>
+                <button onclick="playSound('click'); useHint()" style="background:rgba(255,255,255,0.8); border:2px solid #666; padding:8px 15px; border-radius:20px; font-weight:bold; color:#444;">💡 Hint (-10 Poin)</button>
             </div>
         </div>
 
         <div id="screen-summary" class="screen" style="text-align: center;">
-            <h2 id="summary-title">Level Selesai!</h2>
+            <h2 id="summary-title" style="text-shadow:0 0 5px white;">Level Selesai!</h2>
             <div class="stars" id="summary-stars">⭐⭐⭐</div>
-            <p>Skor Sesi Ini:</p>
+            <p style="font-weight:bold; color:#333;">Skor Sesi Ini:</p>
             <div class="big-score" id="summary-score">0</div>
-            <p id="summary-msg">Luar biasa!</p>
+            <p id="summary-msg" style="font-weight:bold;">Luar biasa!</p>
             <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ccc;">
             <div id="summary-buttons"></div>
         </div>
@@ -365,12 +392,10 @@
         
         if(id === 'screen-levels') renderLevelButtons();
 
-        // --- LOGIKA GANTI BACKGROUND (REVISI) ---
+        // LOGIKA GANTI BACKGROUND
         const container = document.getElementById('main-container');
-        // Hapus kelas background lama
         container.classList.remove('bg-style-menu', 'bg-style-game');
         
-        // Tambahkan kelas background baru sesuai layar
         if (id === 'screen-login' || id === 'screen-menu' || id === 'screen-leaderboard') {
             container.classList.add('bg-style-menu');
         } else {
@@ -412,7 +437,6 @@
             const imgSrc = line.img ? line.img : "assets/img/ben.png"; 
             const html = `<div class="chat-row ${isMe?'row-right':''}"><img src="${imgSrc}" class="avatar"><div class="chat-bubble ${isMe?'bubble-right':'bubble-left'}"><span class="speaker-name">${line.speaker}</span>${line.text}</div></div>`;
             const div=document.createElement('div'); div.innerHTML=html; container.appendChild(div.firstElementChild);
-            // Scroll otomatis ke bawah
             const wrapper = document.querySelector('.content-wrapper');
             wrapper.scrollTop = wrapper.scrollHeight;
             nextBtn.innerText="Lanjut..."; nextBtn.onclick=()=>{ playSound('click'); storyLineIndex++; loadStoryDialogue(); };
