@@ -10,7 +10,8 @@
             --german-black: #222;
             --german-red: #DD0000;
             --german-gold: #FFCE00;
-            --bg-overlay: rgba(255, 255, 255, 0.90);
+            /* Ubah transparansi di sini. Semakin kecil angkanya (misal 0.85), semakin transparan */
+            --bg-overlay: rgba(255, 255, 255, 0.92); 
         }
 
         body {
@@ -18,49 +19,68 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            /* Ubah background body menjadi warna solid netral */
+            background-color: #f0f2f5; 
             min-height: 100vh;
-            overflow: hidden;
-            
-            /* Background Default (akan ditimpa JS) */
-            background-color: #333;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-size: cover;
-            
-            /* Efek transisi halus saat ganti background */
-            transition: background-image 0.5s ease-in-out;
+            /* Hapus overflow:hidden agar bisa discroll di Google Sites */
         }
 
-        /* Kelas untuk Background Menu (Login, Menu, Leaderboard) */
+        /* --- KONTAINER UTAMA (Layar HP) --- */
+        .container {
+            width: 100%;
+            /* Hapus height: 100vh agar tingginya menyesuaikan konten */
+            min-height: 100vh; /* Minimal setinggi layar */
+            max-width: 480px; 
+            
+            /* SETTING BACKGROUND DIPINDAH KE SINI */
+            background-color: #fff; /* Warna dasar jika gambar belum muat */
+            background-position: center top; /* Fokus gambar di tengah atas */
+            background-repeat: no-repeat;
+            background-size: cover; /* Gambar memenuhi kontainer */
+            /* Transisi halus saat ganti background */
+            transition: background-image 0.5s ease-in-out;
+            
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); /* Bayangan lebih halus */
+        }
+
+        /* --- LAPISAN TRANSPARAN DI ATAS GAMBAR --- */
+        /* Kita gunakan pseudo-element ::before untuk membuat lapisan putih */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-overlay); /* Warna putih transparan */
+            backdrop-filter: blur(0px); /* Hapus blur jika membuat berat */
+            z-index: 0; /* Berada di belakang konten */
+        }
+
+        /* --- KELAS BACKGROUND (Dikendalikan JS) --- */
+        /* Gambar harus ada di folder assets/img/ */
         .bg-style-menu {
             background-image: url('assets/img/bg-menu.jpg');
         }
 
-        /* Kelas untuk Background Game (Story, Level, Gameplay, Result) */
         .bg-style-game {
             background-image: url('assets/img/bg-game.jpg');
         }
 
-        .container {
-            width: 100%;
-            height: 100vh; 
-            max-width: 480px; 
-            background: var(--bg-overlay); 
-            display: flex;
-            flex-direction: column;
+        /* --- KONTEN AGAR DI DEPAN LAPISAN --- */
+        .header-controls, .content-wrapper, .article-popup {
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            backdrop-filter: blur(5px);
+            z-index: 1; /* Berada di depan lapisan ::before */
         }
 
         /* --- HEADER --- */
         .header-controls {
             width: 100%; height: 60px; padding: 0 15px; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,0.95); border-bottom: 1px solid #ccc;
-            flex-shrink: 0; z-index: 100;
+            /* Ubah background header jadi transparan agar menyatu */
+            background: rgba(255,255,255,0.5); 
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
         .btn-icon { background: none; border: none; font-size: 1.4em; cursor: pointer; }
         .user-info { font-size: 0.9em; font-weight: bold; color: #444; display: flex; align-items: center; gap: 5px; }
@@ -68,7 +88,8 @@
 
         .content-wrapper {
             width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
-            display: flex; flex-direction: column; overflow-y: auto;
+            display: flex; flex-direction: column; 
+            /* Hapus overflow-y: auto karena scroll ditangani oleh body/iframe */
         }
 
         /* --- SCREENS --- */
@@ -95,43 +116,44 @@
         .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
         .form-input {
             width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px;
-            box-sizing: border-box; font-size: 1em; transition: 0.3s;
+            box-sizing: border-box; font-size: 1em; transition: 0.3s; background: rgba(255,255,255,0.8);
         }
-        .form-input:focus { border-color: var(--german-gold); outline: none; }
+        .form-input:focus { border-color: var(--german-gold); outline: none; background: #fff; }
         .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; }
 
         /* --- LEADERBOARD --- */
         .leaderboard-table {
-            width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 10px; overflow: hidden;
+            width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(255,255,255,0.8); border-radius: 10px; overflow: hidden;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .leaderboard-table th { background: var(--german-black); color: white; padding: 12px; text-align: left; }
         .leaderboard-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .rank-1 { background-color: #FFD700; font-weight: bold; }
-        .rank-2 { background-color: #C0C0C0; font-weight: bold; } 
-        .rank-3 { background-color: #CD7F32; font-weight: bold; }
+        .rank-1 { background-color: rgba(255, 215, 0, 0.3); font-weight: bold; }
+        .rank-2 { background-color: rgba(192, 192, 192, 0.3); font-weight: bold; } 
+        .rank-3 { background-color: rgba(205, 127, 50, 0.3); font-weight: bold; }
 
         /* --- GAMEPLAY ASSETS --- */
         #story-dialog-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
         .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; animation: popIn 0.3s; }
         .row-right { flex-direction: row-reverse; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; background: #ddd; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; background: #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .chat-bubble { max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .bubble-left { background-color: #ffffff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
         .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; }
         .speaker-name { font-size: 0.75em; margin-bottom: 4px; font-weight: bold; color: #666; display: block; }
-        .story-controls { margin-top: 20px; position: sticky; bottom: 0; background: linear-gradient(to top, rgba(255,255,255,0.9) 80%, transparent); padding-top: 20px; }
+        .story-controls { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
         @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
         /* --- SCRAMBLE & POPUP --- */
-        .clue-image { width: 90px; height: 90px; background: #f8f9fa; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 40px; border: 4px solid var(--german-gold); }
+        .clue-image { width: 90px; height: 90px; background: rgba(255,255,255,0.8); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 40px; border: 4px solid var(--german-gold); }
         .slot-container { display: flex; justify-content: center; gap: 8px; margin: 25px 0; flex-wrap: wrap; }
-        .letter-box { width: 42px; height: 42px; border-bottom: 3px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; cursor: pointer; }
-        .letter-box.filled { border-bottom: 3px solid var(--german-black); color: var(--german-black); }
+        .letter-box { width: 42px; height: 42px; border-bottom: 3px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; cursor: pointer; background: rgba(255,255,255,0.8); }
+        .letter-box.filled { border-bottom: 3px solid var(--german-black); color: var(--german-black); background: #fff; }
         .letter-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
-        .letter-btn { width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 10px; color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; }
+        .letter-btn { width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 10px; color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; box-shadow: 0 3px 0 #e6b800; }
+        .letter-btn:active { transform: translateY(3px); box-shadow: none; }
         
-        .article-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
+        .article-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
         .btn-article { padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; width: 100%; margin: 5px 0; }
         .der { background-color: #0099ff; } .die { background-color: #ff3366; } .das { background-color: #33cc33; }
         
@@ -141,7 +163,9 @@
         .stars { font-size: 2.5em; margin-bottom: 10px; }
     </style>
 </head>
-<body class="bg-style-menu"> <div class="container">
+<body class=""> 
+
+<div class="container bg-style-menu" id="main-container">
     <div class="header-controls" id="app-header" style="display:none;">
         <button class="btn-icon" onclick="goHome()">🏠</button>
         <div class="user-info">
@@ -341,14 +365,16 @@
         
         if(id === 'screen-levels') renderLevelButtons();
 
-        // LOGIKA GANTI BACKGROUND
-        // Jika layar adalah Login, Menu, atau Leaderboard -> Pakai bg-menu.jpg
+        // --- LOGIKA GANTI BACKGROUND (REVISI) ---
+        const container = document.getElementById('main-container');
+        // Hapus kelas background lama
+        container.classList.remove('bg-style-menu', 'bg-style-game');
+        
+        // Tambahkan kelas background baru sesuai layar
         if (id === 'screen-login' || id === 'screen-menu' || id === 'screen-leaderboard') {
-            document.body.className = "bg-style-menu";
-        } 
-        // Jika layar adalah Levels, Story, Game, Summary -> Pakai bg-game.jpg
-        else {
-            document.body.className = "bg-style-game";
+            container.classList.add('bg-style-menu');
+        } else {
+            container.classList.add('bg-style-game');
         }
     }
     
@@ -358,9 +384,6 @@
         else showScreen('screen-menu');
     }
     
-    // ... (Sisa fungsi logika game sama seperti sebelumnya) ...
-    // Saya persingkat bagian bawah agar muat, logikanya tidak berubah dari kode sebelumnya.
-
     /* ================= LOGIC GAME ================= */
     let currentMode="", currentLevel=1, currentQuestionIndex=0, currentWordObj=null, userSlots=[], storyLineIndex=0, sessionScore=0;
 
@@ -389,7 +412,9 @@
             const imgSrc = line.img ? line.img : "assets/img/ben.png"; 
             const html = `<div class="chat-row ${isMe?'row-right':''}"><img src="${imgSrc}" class="avatar"><div class="chat-bubble ${isMe?'bubble-right':'bubble-left'}"><span class="speaker-name">${line.speaker}</span>${line.text}</div></div>`;
             const div=document.createElement('div'); div.innerHTML=html; container.appendChild(div.firstElementChild);
-            document.querySelector('.content-wrapper').scrollTop = document.querySelector('.content-wrapper').scrollHeight;
+            // Scroll otomatis ke bawah
+            const wrapper = document.querySelector('.content-wrapper');
+            wrapper.scrollTop = wrapper.scrollHeight;
             nextBtn.innerText="Lanjut..."; nextBtn.onclick=()=>{ playSound('click'); storyLineIndex++; loadStoryDialogue(); };
         } else { nextBtn.innerText="Mulai Tebak >>"; nextBtn.onclick=()=>{ playSound('click'); startStoryGame(); }; }
     }
