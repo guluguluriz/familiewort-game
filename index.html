@@ -10,9 +10,6 @@
             --german-black: #222;
             --german-red: #DD0000;
             --german-gold: #FFCE00;
-            /* REVISI: Transparansi dikurangi drastis (dari 0.9 menjadi 0.2) agar background terlihat */
-            --bg-overlay: rgba(255, 255, 255, 0.2); 
-            --glass-border: rgba(255, 255, 255, 0.5);
         }
 
         body {
@@ -20,18 +17,17 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            /* Background luar untuk layar desktop (opsional) */
             background-color: #333; 
             min-height: 100vh;
         }
 
-        /* --- KONTAINER UTAMA (Layar HP) --- */
+        /* --- KONTAINER UTAMA --- */
         .container {
             width: 100%;
             min-height: 100vh;
             max-width: 480px; 
             
-            /* Background Image diatur di sini oleh JS */
+            /* Background Image diatur JS */
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
@@ -43,27 +39,33 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* --- LAPISAN KACA (Overlay) --- */
+        /* --- LOGIKA LAYER BACKGROUND (PENTING) --- */
+        
         .container::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            
-            /* Warna putih sangat tipis */
-            background: var(--bg-overlay); 
-            
-            /* Efek Blur agar teks terbaca walau background ramai */
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px);
-            
             z-index: 0;
+            transition: all 0.5s ease; /* Transisi halus saat ganti mode */
         }
 
-        /* KELAS BACKGROUND (Gambar Wajib ada di assets/img/) */
+        /* KONDISI 1: MENU / LOGIN (Background Jernih) */
+        .container.bg-style-menu::before {
+            background: rgba(255, 255, 255, 0.0); /* Transparan total */
+            backdrop-filter: none; /* Tidak ada blur */
+        }
+
+        /* KONDISI 2: GAME / STORY (Background Kaca/Buram) */
+        .container.bg-style-game::before {
+            background: rgba(255, 255, 255, 0.85); /* Putih tebal */
+            backdrop-filter: blur(8px); /* Blur aktif */
+        }
+
+        /* Gambar Background */
         .bg-style-menu { background-image: url('assets/img/bg-menu.jpg'); }
         .bg-style-game { background-image: url('assets/img/bg-game.jpg'); }
 
-        /* Agar konten berada di atas lapisan kaca */
+        /* Agar konten berada di atas background */
         .header-controls, .content-wrapper, .article-popup {
             position: relative;
             z-index: 1;
@@ -73,19 +75,86 @@
         .header-controls {
             width: 100%; height: 60px; padding: 0 15px; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center;
-            /* Header semi-transparan */
-            background: rgba(255,255,255,0.7); 
+            background: rgba(255,255,255,0.8); 
             backdrop-filter: blur(5px);
-            border-bottom: 1px solid rgba(255,255,255,0.5);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
             flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .btn-icon { background: none; border: none; font-size: 1.4em; cursor: pointer; }
-        .user-info { font-size: 0.9em; font-weight: bold; color: #222; display: flex; align-items: center; gap: 5px; text-shadow: 0 0 10px white; }
-        .score-badge { background: var(--german-gold); color: #222; padding: 2px 8px; border-radius: 10px; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .user-info { font-size: 0.9em; font-weight: bold; color: #222; display: flex; align-items: center; gap: 5px; }
+        .score-badge { background: var(--german-gold); color: #222; padding: 2px 8px; border-radius: 10px; font-size: 0.9em; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 
         .content-wrapper {
             width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
             display: flex; flex-direction: column;
+        }
+
+        /* --- TEXT SHADOWS & TYPOGRAPHY --- */
+        /* Judul Besar dengan Bayangan Kuat agar terbaca di background ilustrasi */
+        h1 {
+            color: #222;
+            text-shadow: 2px 2px 0px #fff, 0 0 15px rgba(255,255,255,0.8);
+            margin-bottom: 5px;
+        }
+        
+        .sub-title-text {
+            color: #333;
+            font-weight: bold;
+            text-shadow: 1px 1px 0px #fff; 
+            margin-bottom: 30px;
+        }
+
+        /* --- TOMBOL (Bayangan agar tidak menyatu) --- */
+        .btn {
+            display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px;
+            font-size: 1.1em; cursor: pointer; font-weight: bold; 
+            
+            /* Bayangan tombol agar ngambang */
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.5); 
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        
+        .btn-story { background: var(--german-gold); color: var(--german-black); }
+        .btn-free { background: var(--german-black); color: white; }
+        .btn-next { background: #28a745; color: white; }
+        .btn-back { background: #f8f9fa; color: #333; }
+        .btn-locked { background-color: rgba(200,200,200,0.9); color: #666; cursor: not-allowed; }
+        .btn-danger { background: #dc3545; color: white; font-size: 0.9em; padding: 10px; width: auto; display: inline-block; box-shadow: 0 3px 5px rgba(0,0,0,0.2); }
+
+        /* --- FORM LOGIN (Kotak Putih Transparan) --- */
+        /* Bungkus area input dengan kotak putih transparan agar label terbaca */
+        .login-box {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #222; }
+        .form-input {
+            width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 10px;
+            box-sizing: border-box; font-size: 1em; transition: 0.3s;
+            background: #fff; /* Input putih solid */
+        }
+        .form-input:focus { border-color: var(--german-gold); outline: none; }
+        .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; background: #ffe6e6; padding: 5px; border-radius: 5px; }
+
+        /* --- DISCLAIMER BOX (Agar Google tidak merah) --- */
+        .disclaimer-box {
+            font-size: 0.8em; 
+            color: #333; 
+            background: #e8f0fe; 
+            border: 1px solid #b3d7ff;
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-top: 25px; 
+            line-height: 1.4;
+            text-align: center;
         }
 
         /* --- SCREENS --- */
@@ -93,101 +162,42 @@
         .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TOMBOL (Dibuat Solid agar kontras) --- */
-        .btn {
-            display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px;
-            font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s; border: 1px solid rgba(255,255,255,0.4);
-        }
-        .btn:active { transform: scale(0.95); }
-        .btn-story { background: var(--german-gold); color: var(--german-black); }
-        .btn-free { background: var(--german-black); color: white; }
-        .btn-next { background: #28a745; color: white; }
-        .btn-back { background: #f8f9fa; color: #333; }
-        .btn-locked { background-color: rgba(200,200,200,0.8); color: #666; cursor: not-allowed; }
-        .btn-danger { background: #dc3545; color: white; font-size: 0.9em; padding: 10px; width: auto; display: inline-block; }
-
-        /* --- FORM LOGIN (Dibuat semi-solid agar mudah dibaca) --- */
-        #screen-login h1, #screen-menu h1 {
-            text-shadow: 2px 2px 0px rgba(255,255,255,0.8); /* Shadow putih agar teks hitam terbaca di bg gelap */
-        }
-        
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #222; text-shadow: 0 0 5px white; }
-        .form-input {
-            width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.5); border-radius: 10px;
-            box-sizing: border-box; font-size: 1em; transition: 0.3s;
-            /* Input putih agak transparan */
-            background: rgba(255,255,255,0.85); 
-        }
-        .form-input:focus { border-color: var(--german-gold); outline: none; background: #fff; }
-        .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; }
-
-        /* --- LEADERBOARD --- */
+        /* --- LEADERBOARD & LAINNYA --- */
         .leaderboard-table {
             width: 100%; border-collapse: collapse; margin-top: 10px; 
-            /* Tabel semi transparan */
-            background: rgba(255,255,255,0.85); 
-            border-radius: 10px; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.9); 
+            border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .leaderboard-table th { background: var(--german-black); color: white; padding: 12px; text-align: left; }
         .leaderboard-table td { padding: 12px; border-bottom: 1px solid #ddd; font-weight: bold; }
-        .rank-1 { background-color: rgba(255, 215, 0, 0.4); }
-        .rank-2 { background-color: rgba(192, 192, 192, 0.4); } 
-        .rank-3 { background-color: rgba(205, 127, 50, 0.4); }
-
-        /* --- CHAT BUBBLES --- */
-        #story-dialog-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
-        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; animation: popIn 0.3s; }
+        
+        /* --- GAME ASSETS --- */
+        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; animation: popIn 0.3s; margin-bottom: 15px; }
         .row-right { flex-direction: row-reverse; }
         .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 3px solid white; background: #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
-        
-        .chat-bubble { 
-            max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; 
-            box-shadow: 0 3px 5px rgba(0,0,0,0.1); 
-        }
+        .chat-bubble { max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; box-shadow: 0 3px 5px rgba(0,0,0,0.1); }
         .bubble-left { background-color: rgba(255,255,255,0.95); border-bottom-left-radius: 4px; color: #333; }
-        .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+        .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; }
         .speaker-name { font-size: 0.75em; margin-bottom: 4px; font-weight: bold; color: #444; display: block; }
-        
         .story-controls { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        /* --- GAMEPLAY ASSETS --- */
-        .clue-image { 
-            width: 100px; height: 100px; 
-            background: rgba(255,255,255,0.9); /* Kotak clue putih solid */
-            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; 
-            border-radius: 50%; font-size: 45px; border: 5px solid var(--german-gold); 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
+        .clue-image { width: 90px; height: 90px; background: #fff; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 40px; border: 5px solid var(--german-gold); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .slot-container { display: flex; justify-content: center; gap: 8px; margin: 25px 0; flex-wrap: wrap; }
-        
-        .letter-box { 
-            width: 45px; height: 45px; border-bottom: 3px solid #555; display: flex; align-items: center; justify-content: center; 
-            font-size: 1.4em; font-weight: bold; cursor: pointer; 
-            background: rgba(255,255,255,0.9); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .letter-box { width: 45px; height: 45px; border-bottom: 3px solid #555; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; cursor: pointer; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .letter-box.filled { border: 2px solid var(--german-black); color: var(--german-black); background: #fff; transform: translateY(-2px); }
-        
         .letter-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
-        .letter-btn { 
-            width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 12px; 
-            color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; 
-            box-shadow: 0 4px 0 #e6b800; 
-        }
-        .letter-btn:active { transform: translateY(4px); box-shadow: none; }
+        .letter-btn { width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 12px; color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; box-shadow: 0 3px 0 #e6b800; }
         
         .article-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
         .btn-article { padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; width: 100%; margin: 5px 0; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-        .btn-article:active { transform: translateY(4px); box-shadow: none; }
         .der { background-color: #0099ff; } .die { background-color: #ff3366; } .das { background-color: #33cc33; }
         
         .feedback { margin-top: 15px; font-weight: bold; height: 20px; text-shadow: 0 0 5px white; }
         .correct { color: #006400; } .wrong { color: #8B0000; }
         .big-score { font-size: 4em; font-weight: bold; color: var(--german-black); margin: 10px 0; text-shadow: 2px 2px 0 white; }
         .stars { font-size: 2.5em; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class=""> 
@@ -204,26 +214,35 @@
     <div class="content-wrapper">
         
         <div id="screen-login" class="screen active" style="text-align: center;">
-            <div style="font-size: 4em; margin-bottom: 10px;">🇩🇪</div>
-            <h1>Familienwort</h1>
-            <p style="color:#333; font-weight:bold; margin-bottom:30px; text-shadow:0 0 10px white;">Login untuk menyimpan skor!</p>
-            <div class="form-group">
-                <label class="form-label">Username</label>
-                <input type="text" id="login-user" class="form-input" placeholder="Nama Anda...">
+            <h1 style="font-size: 2.5em; margin-top: 50px;">Familienwort</h1>
+            <p class="sub-title-text">Login untuk menyimpan skor!</p>
+            
+            <div class="login-box">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="login-user" class="form-input" placeholder="Nama Anda...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="login-pass" class="form-input" placeholder="Rahasia...">
+                </div>
+                <p id="login-error" class="error-msg">Username/Password salah!</p>
+                <button class="btn btn-free" onclick="handleLogin()">Masuk (Login)</button>
+                <button class="btn btn-story" onclick="handleRegister()">Daftar Baru</button>
             </div>
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" id="login-pass" class="form-input" placeholder="Rahasia...">
+
+            <div class="disclaimer-box">
+                <strong>Project Disclaimer:</strong><br>
+                Ini adalah simulasi game edukasi mahasiswa.<br>
+                Login ini bersifat offline (LocalStorage).<br> 
+                Tidak ada data yang dikirim ke server manapun. Aman.
             </div>
-            <p id="login-error" class="error-msg">Username/Password salah!</p>
-            <button class="btn btn-free" onclick="handleLogin()">Masuk (Login)</button>
-            <button class="btn btn-story" onclick="handleRegister()">Daftar Baru</button>
-            <p style="font-size:0.8em; color:#333; background:rgba(255,255,255,0.6); padding:5px; border-radius:5px; margin-top:20px;">*Data tersimpan di perangkat ini (LocalStorage).</p>
         </div>
 
         <div id="screen-menu" class="screen" style="text-align: center; padding-top: 20px;">
-            <h1>Menu Utama</h1>
-            <div style="font-size: 4em; margin: 20px 0;">🇩🇪</div>
+            <h1 style="font-size: 2.5em;">Menu Utama</h1>
+            <div style="font-size: 1.5em; font-weight:bold; margin-bottom:30px; text-shadow: 1px 1px 0 #fff;">Pilih Mode:</div>
+            
             <button class="btn btn-story" onclick="playSound('click'); startStoryMode()">📖 Story Mode</button>
             <button class="btn btn-free" onclick="playSound('click'); showLevelSelect()">🎮 Free Mode</button>
             <button class="btn btn-next" onclick="playSound('click'); showLeaderboard()">🏆 Papan Peringkat</button>
@@ -233,8 +252,8 @@
         </div>
 
         <div id="screen-leaderboard" class="screen">
-            <h2 style="text-align:center; text-shadow:0 0 5px white;">🏆 Papan Peringkat</h2>
-            <p style="text-align:center; font-size:0.9em; color:#333; font-weight:bold;">Top Skor Tertinggi</p>
+            <h2 style="text-align:center; text-shadow:1px 1px 0 white;">🏆 Papan Peringkat</h2>
+            <p style="text-align:center; font-size:0.9em; color:#333; font-weight:bold; text-shadow:1px 1px 0 white;">Top Skor Tertinggi</p>
             <table class="leaderboard-table">
                 <thead><tr><th style="width:15%">#</th><th>Nama</th><th style="text-align:right">Total XP</th></tr></thead>
                 <tbody id="leaderboard-body"></tbody>
@@ -243,7 +262,7 @@
         </div>
 
         <div id="screen-levels" class="screen" style="text-align: center;">
-            <h2 style="text-shadow:0 0 5px white;">Pilih Level</h2>
+            <h2 style="text-shadow:1px 1px 0 white;">Pilih Level</h2>
             <div id="level-buttons-container" style="margin-top: 20px;"></div>
         </div>
 
@@ -261,12 +280,12 @@
             <div class="feedback" id="feedback-msg"></div>
             <div class="letter-pool" id="pool"></div>
             <div style="margin-top: 40px;">
-                <button onclick="playSound('click'); useHint()" style="background:rgba(255,255,255,0.8); border:2px solid #666; padding:8px 15px; border-radius:20px; font-weight:bold; color:#444;">💡 Hint (-10 Poin)</button>
+                <button onclick="playSound('click'); useHint()" style="background:rgba(255,255,255,0.9); border:2px solid #666; padding:8px 15px; border-radius:20px; font-weight:bold; color:#444; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">💡 Hint (-10 Poin)</button>
             </div>
         </div>
 
         <div id="screen-summary" class="screen" style="text-align: center;">
-            <h2 id="summary-title" style="text-shadow:0 0 5px white;">Level Selesai!</h2>
+            <h2 id="summary-title" style="text-shadow:1px 1px 0 white;">Level Selesai!</h2>
             <div class="stars" id="summary-stars">⭐⭐⭐</div>
             <p style="font-weight:bold; color:#333;">Skor Sesi Ini:</p>
             <div class="big-score" id="summary-score">0</div>
@@ -437,6 +456,7 @@
             const imgSrc = line.img ? line.img : "assets/img/ben.png"; 
             const html = `<div class="chat-row ${isMe?'row-right':''}"><img src="${imgSrc}" class="avatar"><div class="chat-bubble ${isMe?'bubble-right':'bubble-left'}"><span class="speaker-name">${line.speaker}</span>${line.text}</div></div>`;
             const div=document.createElement('div'); div.innerHTML=html; container.appendChild(div.firstElementChild);
+            // Scroll otomatis ke bawah
             const wrapper = document.querySelector('.content-wrapper');
             wrapper.scrollTop = wrapper.scrollHeight;
             nextBtn.innerText="Lanjut..."; nextBtn.onclick=()=>{ playSound('click'); storyLineIndex++; loadStoryDialogue(); };
