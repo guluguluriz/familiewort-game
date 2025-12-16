@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Familienwort: Mobile Game</title>
+    <style>
+        /* --- CSS UTAMA --- */
+        :root {
+            --german-black: #222;
+            --german-red: #DD0000;
+            --german-gold: #FFCE00;
+            --bg-overlay: rgba(255, 255, 255, 0.90);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            
+            /* Background Default (akan ditimpa JS) */
+            background-color: #333;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            
+            /* Efek transisi halus saat ganti background */
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        /* Kelas untuk Background Menu (Login, Menu, Leaderboard) */
+        .bg-style-menu {
+            background-image: url('assets/img/bg-menu.jpg');
+        }
+
+        /* Kelas untuk Background Game (Story, Level, Gameplay, Result) */
+        .bg-style-game {
+            background-image: url('assets/img/bg-game.jpg');
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh; 
+            max-width: 480px; 
+            background: var(--bg-overlay); 
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- HEADER --- */
+        .header-controls {
+            width: 100%; height: 60px; padding: 0 15px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.95); border-bottom: 1px solid #ccc;
+            flex-shrink: 0; z-index: 100;
+        }
+        .btn-icon { background: none; border: none; font-size: 1.4em; cursor: pointer; }
+        .user-info { font-size: 0.9em; font-weight: bold; color: #444; display: flex; align-items: center; gap: 5px; }
+        .score-badge { background: var(--german-gold); color: #222; padding: 2px 8px; border-radius: 10px; font-size: 0.9em; }
+
+        .content-wrapper {
+            width: 100%; padding: 20px; box-sizing: border-box; flex-grow: 1;
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+
+        /* --- SCREENS --- */
+        .screen { display: none; width: 100%; animation: fadeIn 0.4s ease-out; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- TOMBOL --- */
+        .btn {
+            display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 12px;
+            font-size: 1.1em; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-story { background: var(--german-gold); color: var(--german-black); }
+        .btn-free { background: var(--german-black); color: white; }
+        .btn-next { background: #28a745; color: white; }
+        .btn-back { background: #f0f0f0; color: #333; }
+        .btn-locked { background-color: #e9ecef; color: #adb5bd; cursor: not-allowed; }
+        .btn-danger { background: #dc3545; color: white; font-size: 0.9em; padding: 10px; width: auto; display: inline-block; }
+
+        /* --- FORM LOGIN --- */
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-input {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px;
+            box-sizing: border-box; font-size: 1em; transition: 0.3s;
+        }
+        .form-input:focus { border-color: var(--german-gold); outline: none; }
+        .error-msg { color: var(--german-red); font-size: 0.9em; margin-top: 5px; display: none; }
+
+        /* --- LEADERBOARD --- */
+        .leaderboard-table {
+            width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .leaderboard-table th { background: var(--german-black); color: white; padding: 12px; text-align: left; }
+        .leaderboard-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .rank-1 { background-color: #FFD700; font-weight: bold; }
+        .rank-2 { background-color: #C0C0C0; font-weight: bold; } 
+        .rank-3 { background-color: #CD7F32; font-weight: bold; }
+
+        /* --- GAMEPLAY ASSETS --- */
+        #story-dialog-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
+        .chat-row { display: flex; align-items: flex-end; gap: 10px; width: 100%; animation: popIn 0.3s; }
+        .row-right { flex-direction: row-reverse; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; background: #ddd; }
+        .chat-bubble { max-width: 70%; padding: 12px 16px; border-radius: 18px; font-size: 1em; line-height: 1.4; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .bubble-left { background-color: #ffffff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+        .bubble-right { background-color: var(--german-gold); color: #222; border-bottom-right-radius: 4px; }
+        .speaker-name { font-size: 0.75em; margin-bottom: 4px; font-weight: bold; color: #666; display: block; }
+        .story-controls { margin-top: 20px; position: sticky; bottom: 0; background: linear-gradient(to top, rgba(255,255,255,0.9) 80%, transparent); padding-top: 20px; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- SCRAMBLE & POPUP --- */
+        .clue-image { width: 90px; height: 90px; background: #f8f9fa; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 40px; border: 4px solid var(--german-gold); }
+        .slot-container { display: flex; justify-content: center; gap: 8px; margin: 25px 0; flex-wrap: wrap; }
+        .letter-box { width: 42px; height: 42px; border-bottom: 3px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; cursor: pointer; }
+        .letter-box.filled { border-bottom: 3px solid var(--german-black); color: var(--german-black); }
+        .letter-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+        .letter-btn { width: 50px; height: 50px; background: white; border: 2px solid var(--german-gold); border-radius: 10px; color: var(--german-black); font-weight: bold; font-size: 1.3em; cursor: pointer; }
+        
+        .article-popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; padding: 20px; }
+        .btn-article { padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 1.2em; width: 100%; margin: 5px 0; }
+        .der { background-color: #0099ff; } .die { background-color: #ff3366; } .das { background-color: #33cc33; }
+        
+        .feedback { margin-top: 15px; font-weight: bold; height: 20px; }
+        .correct { color: #28a745; } .wrong { color: #dc3545; }
+        .big-score { font-size: 4em; font-weight: bold; color: var(--german-black); margin: 10px 0; }
+        .stars { font-size: 2.5em; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="bg-style-menu"> <div class="container">
+    <div class="header-controls" id="app-header" style="display:none;">
+        <button class="btn-icon" onclick="goHome()">🏠</button>
+        <div class="user-info">
+            <span id="display-username">User</span>
+            <span class="score-badge" id="display-total-score">0 XP</span>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        
+        <div id="screen-login" class="screen active" style="text-align: center;">
+            <div style="font-size: 4em; margin-bottom: 10px;">🇩🇪</div>
+            <h1>Familienwort</h1>
+            <p style="color:#666; margin-bottom:30px;">Login untuk menyimpan skor!</p>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="login-user" class="form-input" placeholder="Nama Anda...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="login-pass" class="form-input" placeholder="Rahasia...">
+            </div>
+            <p id="login-error" class="error-msg">Username/Password salah!</p>
+            <button class="btn btn-free" onclick="handleLogin()">Masuk (Login)</button>
+            <button class="btn btn-story" onclick="handleRegister()">Daftar Baru</button>
+            <p style="font-size:0.8em; color:#888; margin-top:20px;">*Data tersimpan di perangkat ini (LocalStorage).</p>
+        </div>
+
+        <div id="screen-menu" class="screen" style="text-align: center; padding-top: 20px;">
+            <h1>Menu Utama</h1>
+            <div style="font-size: 4em; margin: 20px 0;">🇩🇪</div>
+            <button class="btn btn-story" onclick="playSound('click'); startStoryMode()">📖 Story Mode</button>
+            <button class="btn btn-free" onclick="playSound('click'); showLevelSelect()">🎮 Free Mode</button>
+            <button class="btn btn-next" onclick="playSound('click'); showLeaderboard()">🏆 Papan Peringkat</button>
+            <div style="margin-top: 30px;">
+                <button class="btn btn-danger" onclick="handleLogout()">Keluar (Logout)</button>
+            </div>
+        </div>
+
+        <div id="screen-leaderboard" class="screen">
+            <h2 style="text-align:center;">🏆 Papan Peringkat</h2>
+            <p style="text-align:center; font-size:0.9em; color:#666;">Top Skor Tertinggi</p>
+            <table class="leaderboard-table">
+                <thead><tr><th style="width:15%">#</th><th>Nama</th><th style="text-align:right">Total XP</th></tr></thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button class="btn btn-back" onclick="goHome()">Kembali</button>
+        </div>
+
+        <div id="screen-levels" class="screen" style="text-align: center;">
+            <h2>Pilih Level</h2>
+            <div id="level-buttons-container" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="screen-story" class="screen">
+            <div id="story-dialog-container"></div>
+            <div class="story-controls">
+                <button id="story-next-btn" class="btn btn-story" onclick="playSound('click'); nextStoryLine()">Lanjut...</button>
+            </div>
+        </div>
+
+        <div id="screen-game" class="screen" style="text-align: center;">
+            <div class="clue-image" id="clue-icon">🇩🇪</div>
+            <p id="clue-text" style="font-weight:bold; font-size: 1.1em; color:#555;">Clue</p>
+            <div class="slot-container" id="slots"></div>
+            <div class="feedback" id="feedback-msg"></div>
+            <div class="letter-pool" id="pool"></div>
+            <div style="margin-top: 40px;">
+                <button onclick="playSound('click'); useHint()" style="background:none; border:2px solid #666; padding:8px 15px; border-radius:20px; font-weight:bold; color:#444;">💡 Hint (-10 Poin)</button>
+            </div>
+        </div>
+
+        <div id="screen-summary" class="screen" style="text-align: center;">
+            <h2 id="summary-title">Level Selesai!</h2>
+            <div class="stars" id="summary-stars">⭐⭐⭐</div>
+            <p>Skor Sesi Ini:</p>
+            <div class="big-score" id="summary-score">0</div>
+            <p id="summary-msg">Luar biasa!</p>
+            <hr style="margin: 30px 0; border: 0; border-top: 1px solid #ccc;">
+            <div id="summary-buttons"></div>
+        </div>
+    </div>
+
+    <div id="article-check" class="article-popup">
+        <h2 id="article-word" style="font-size:2.5em; margin-bottom:5px;">WORD</h2>
+        <p style="color:#666; margin-bottom: 20px;">Pilih artikel yang tepat:</p>
+        <div class="article-options">
+            <button class="btn-article der" onclick="checkArticle('der')">DER</button>
+            <button class="btn-article die" onclick="checkArticle('die')">DIE</button>
+            <button class="btn-article das" onclick="checkArticle('das')">DAS</button>
+        </div>
+        <p id="article-feedback" style="margin-top:20px; font-weight:bold; font-size:1.1em; text-align: center;"></p>
+    </div>
+</div>
+
+<script>
+    /* ================= SYSTEM: DATABASE & AUTH ================= */
+    const DB_KEY = 'familienwort_users';
+    const SESSION_KEY = 'familienwort_current_user';
+    let currentUser = null;
+
+    function getUsersDB() { const data = localStorage.getItem(DB_KEY); return data ? JSON.parse(data) : []; }
+    function saveUsersDB(users) { localStorage.setItem(DB_KEY, JSON.stringify(users)); }
+
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const errorMsg = document.getElementById('login-error');
+        if(!u || !p) { errorMsg.innerText = "Isi username dan password!"; errorMsg.style.display = 'block'; return; }
+        const users = getUsersDB();
+        const found = users.find(user => user.username === u && user.password === p);
+        if(found) { loginSuccess(found); } 
+        else { errorMsg.innerText = "Username tidak ditemukan atau password salah."; errorMsg.style.display = 'block'; }
+    }
+
+    function handleRegister() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const errorMsg = document.getElementById('login-error');
+        if(!u || !p) { errorMsg.innerText = "Isi username dan password!"; errorMsg.style.display = 'block'; return; }
+        const users = getUsersDB();
+        if(users.find(user => user.username === u)) { errorMsg.innerText = "Username sudah dipakai!"; errorMsg.style.display = 'block'; return; }
+        const newUser = { username: u, password: p, totalScore: 0, unlockedLevel: 1 };
+        users.push(newUser); saveUsersDB(users);
+        alert("Pendaftaran berhasil! Silakan login."); errorMsg.style.display = 'none';
+    }
+
+    function loginSuccess(userObj) {
+        currentUser = userObj; localStorage.setItem(SESSION_KEY, userObj.username);
+        document.getElementById('display-username').innerText = currentUser.username;
+        document.getElementById('display-total-score').innerText = currentUser.totalScore + " XP";
+        document.getElementById('app-header').style.display = 'flex';
+        document.getElementById('login-user').value = ""; document.getElementById('login-pass').value = "";
+        document.getElementById('login-error').style.display = 'none';
+        playSound('click'); showScreen('screen-menu');
+    }
+
+    function checkSession() {
+        const sessionUser = localStorage.getItem(SESSION_KEY);
+        if(sessionUser) { const users = getUsersDB(); const found = users.find(u => u.username === sessionUser); if(found) loginSuccess(found); }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem(SESSION_KEY); currentUser = null; document.getElementById('app-header').style.display = 'none'; showScreen('screen-login');
+    }
+
+    function saveScoreToDB(scoreToAdd) {
+        if(!currentUser) return;
+        currentUser.totalScore += scoreToAdd;
+        const users = getUsersDB(); const index = users.findIndex(u => u.username === currentUser.username);
+        if(index !== -1) {
+            users[index].totalScore = currentUser.totalScore;
+            if(currentUser.totalScore >= 150 && users[index].unlockedLevel < 2) users[index].unlockedLevel = 2;
+            if(currentUser.totalScore >= 350 && users[index].unlockedLevel < 3) users[index].unlockedLevel = 3;
+            currentUser.unlockedLevel = users[index].unlockedLevel;
+            saveUsersDB(users);
+        }
+        document.getElementById('display-total-score').innerText = currentUser.totalScore + " XP";
+    }
+
+    function showLeaderboard() {
+        const users = getUsersDB(); users.sort((a, b) => b.totalScore - a.totalScore);
+        const tbody = document.getElementById('leaderboard-body'); tbody.innerHTML = "";
+        users.forEach((user, index) => {
+            let rankClass = ""; if(index===0) rankClass="rank-1"; else if(index===1) rankClass="rank-2"; else if(index===2) rankClass="rank-3";
+            const row = `<tr class="${rankClass}"><td>${index + 1}</td><td>${user.username} ${index===0?'👑':''}</td><td style="text-align:right">${user.totalScore}</td></tr>`;
+            tbody.innerHTML += row;
+        });
+        showScreen('screen-leaderboard');
+    }
+
+    /* ================= AUDIO & ASSETS ================= */
+    function playSound(type) {
+        let f=""; if(type==='click')f="assets/audio/click.mp3"; else if(type==='correct')f="assets/audio/correct.mp3"; else if(type==='wrong')f="assets/audio/wrong.mp3";
+        if(f) new Audio(f).play().catch(()=>{});
+    }
+    function playVoice(w) { new Audio("assets/audio/"+w.toLowerCase()+".mp3").play().catch(()=>{}); }
+
+    const vocabData = {
+        1: [{word:"PAPA",clue:"Ayah (Sapaan)",article:"der"},{word:"MAMA",clue:"Ibu (Sapaan)",article:"die"},{word:"KIND",clue:"Anak Kecil",article:"das"},{word:"OMA",clue:"Nenek (Sapaan)",article:"die"}],
+        2: [{word:"VATER",clue:"Ayah (Formal)",article:"der"},{word:"MUTTER",clue:"Ibu (Formal)",article:"die"},{word:"BRUDER",clue:"Saudara Laki",article:"der"},{word:"ELTERN",clue:"Orang Tua",article:"die"}],
+        3: [{word:"GESCHWISTER",clue:"Saudara Kandung",article:"die"},{word:"GROSSVATER",clue:"Kakek",article:"der"},{word:"GROSSELTERN",clue:"Kakek-Nenek",article:"die"}]
+    };
+    const storyScripts = [
+        { dialogues: [{speaker:"Anna",img:"assets/img/anna.png",text:"Hallo Ben, wer ist das auf dem Foto?"}, {speaker:"Ben",img:"assets/img/ben.png",text:"Das ist mein Vater. Er heißt Markus."}, {speaker:"Anna",img:"assets/img/anna.png",text:"Und die Frau hier? Ist das deine Schwester?"}, {speaker:"Ben",img:"assets/img/ben.png",text:"Nein, das ist meine Mutter. Sie heißt Julia."}], question: "Worüber sprechen Anna und Ben?", target: {word:"ELTERN",clue:"Vater + Mutter = ?",article:"die"} },
+        { dialogues: [{speaker:"Anna",img:"assets/img/anna.png",text:"Hast du Geschwister, Ben?"}, {speaker:"Ben",img:"assets/img/ben.png",text:"Ja, ich habe einen Bruder."}, {speaker:"Anna",img:"assets/img/anna.png",text:"Und hast du auch eine Schwester?"}, {speaker:"Ben",img:"assets/img/ben.png",text:"Ja, eine Schwester. Wir spielen oft zusammen."}], question: "Siapa Bruder dan Schwester itu?", target: {word:"GESCHWISTER",clue:"Bruder + Schwester = ?",article:"die"} }
+    ];
+
+    /* ================= NAVIGATION & BACKGROUND LOGIC ================= */
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('article-check').style.display='none';
+        
+        if(id === 'screen-login') document.getElementById('app-header').style.display = 'none';
+        else if(currentUser) document.getElementById('app-header').style.display = 'flex';
+        
+        if(id === 'screen-levels') renderLevelButtons();
+
+        // LOGIKA GANTI BACKGROUND
+        // Jika layar adalah Login, Menu, atau Leaderboard -> Pakai bg-menu.jpg
+        if (id === 'screen-login' || id === 'screen-menu' || id === 'screen-leaderboard') {
+            document.body.className = "bg-style-menu";
+        } 
+        // Jika layar adalah Levels, Story, Game, Summary -> Pakai bg-game.jpg
+        else {
+            document.body.className = "bg-style-game";
+        }
+    }
+    
+    function showLevelSelect() { showScreen('screen-levels'); }
+    function goHome() {
+        if(currentMode!=="") { if(confirm("Keluar ke Menu Utama?")) { showScreen('screen-menu'); currentMode=""; } }
+        else showScreen('screen-menu');
+    }
+    
+    // ... (Sisa fungsi logika game sama seperti sebelumnya) ...
+    // Saya persingkat bagian bawah agar muat, logikanya tidak berubah dari kode sebelumnya.
+
+    /* ================= LOGIC GAME ================= */
+    let currentMode="", currentLevel=1, currentQuestionIndex=0, currentWordObj=null, userSlots=[], storyLineIndex=0, sessionScore=0;
+
+    function renderLevelButtons() {
+        const container = document.getElementById('level-buttons-container'); container.innerHTML='';
+        const levels = [{id:1,name:"Level 1: Dasar"},{id:2,name:"Level 2: Menengah"},{id:3,name:"Level 3: Sulit"}];
+        let maxLvl = currentUser ? currentUser.unlockedLevel : 1;
+        levels.forEach(lvl => {
+            const btn = document.createElement('button');
+            if(lvl.id <= maxLvl) { btn.className='btn btn-free'; btn.onclick=()=>{ playSound('click'); startFreeMode(lvl.id); }; btn.innerHTML=lvl.name; }
+            else { btn.className='btn btn-locked'; btn.disabled=true; btn.innerHTML=`${lvl.name} 🔒`; }
+            container.appendChild(btn);
+        });
+    }
+
+    function startFreeMode(lvl) { currentMode='free'; currentLevel=lvl; sessionScore=0; currentQuestionIndex=0; loadQuestion(); showScreen('screen-game'); }
+    function startStoryMode() { currentMode='story'; sessionScore=0; currentQuestionIndex=0; storyLineIndex=0; document.getElementById('story-dialog-container').innerHTML=''; loadStoryDialogue(); showScreen('screen-story'); }
+
+    function loadStoryDialogue() {
+        const script = storyScripts[currentQuestionIndex];
+        const container = document.getElementById('story-dialog-container');
+        const nextBtn = document.getElementById('story-next-btn');
+        if(storyLineIndex < script.dialogues.length) {
+            const line = script.dialogues[storyLineIndex];
+            const isMe = (line.speaker === "Ben" || line.speaker === "Ibu");
+            const imgSrc = line.img ? line.img : "assets/img/ben.png"; 
+            const html = `<div class="chat-row ${isMe?'row-right':''}"><img src="${imgSrc}" class="avatar"><div class="chat-bubble ${isMe?'bubble-right':'bubble-left'}"><span class="speaker-name">${line.speaker}</span>${line.text}</div></div>`;
+            const div=document.createElement('div'); div.innerHTML=html; container.appendChild(div.firstElementChild);
+            document.querySelector('.content-wrapper').scrollTop = document.querySelector('.content-wrapper').scrollHeight;
+            nextBtn.innerText="Lanjut..."; nextBtn.onclick=()=>{ playSound('click'); storyLineIndex++; loadStoryDialogue(); };
+        } else { nextBtn.innerText="Mulai Tebak >>"; nextBtn.onclick=()=>{ playSound('click'); startStoryGame(); }; }
+    }
+    
+    function startStoryGame() { const script = storyScripts[currentQuestionIndex]; currentWordObj=script.target; setupScrambleGame(script.target); showScreen('screen-game'); document.getElementById('clue-text').innerText=script.question; document.getElementById('clue-icon').innerText="❓"; }
+
+    function loadQuestion() { const list = vocabData[currentLevel]; if(currentQuestionIndex >= list.length) { finishLevel(); return; } currentWordObj=list[currentQuestionIndex]; setupScrambleGame(currentWordObj); }
+
+    function setupScrambleGame(wordData) {
+        userSlots=new Array(wordData.word.length).fill(null); document.getElementById('feedback-msg').innerText="";
+        if(currentMode==='free') { document.getElementById('clue-text').innerText=wordData.clue; document.getElementById('clue-icon').innerText="🇩🇪"; }
+        renderSlots(); let letters=wordData.word.split(''); shuffleArray(letters);
+        const pool=document.getElementById('pool'); pool.innerHTML='';
+        letters.forEach(char=>{ const btn=document.createElement('button'); btn.className='letter-btn'; btn.innerText=char; btn.onclick=()=>{ playSound('click'); fillSlot(char, btn); }; pool.appendChild(btn); });
+    }
+
+    function renderSlots() { const slots=document.getElementById('slots'); slots.innerHTML=''; userSlots.forEach((char,idx)=>{ const box=document.createElement('div'); box.className='letter-box'+(char?' filled':''); box.innerText=char||''; box.onclick=()=>{ playSound('click'); removeSlot(idx); }; slots.appendChild(box); }); }
+
+    function fillSlot(char, btn) { const idx=userSlots.indexOf(null); if(idx!==-1) { userSlots[idx]=char; renderSlots(); btn.disabled=true; btn.dataset.slotIndex=idx; if(!userSlots.includes(null)) checkWord(); } }
+
+    function removeSlot(idx) { if(userSlots[idx]!==null) { const char=userSlots[idx]; userSlots[idx]=null; document.querySelectorAll('.letter-btn').forEach(b=>{ if(b.innerText===char && b.disabled && b.dataset.slotIndex==idx) b.disabled=false; }); renderSlots(); } }
+
+    function checkWord() { if(userSlots.join('')===currentWordObj.word) { document.getElementById('feedback-msg').innerText="Benar!"; document.getElementById('feedback-msg').className="feedback correct"; playSound('correct'); setTimeout(()=>showArticleCheck(currentWordObj.word), 600); } else { document.getElementById('feedback-msg').innerText="Salah!"; document.getElementById('feedback-msg').className="feedback wrong"; playSound('wrong'); } }
+
+    function showArticleCheck(w) { document.getElementById('article-check').style.display='flex'; document.getElementById('article-word').innerText=w; document.getElementById('article-feedback').innerText=""; }
+
+    function checkArticle(choice) {
+        const correct=currentWordObj.article; playVoice(currentWordObj.word);
+        if(choice===correct) { sessionScore+=20; document.getElementById('article-feedback').innerText="Sempurna! (+20)"; document.getElementById('article-feedback').style.color="green"; playSound('correct'); } 
+        else { sessionScore+=10; document.getElementById('article-feedback').innerText=`Salah. (+10)\nYang benar: ${correct.toUpperCase()}`; document.getElementById('article-feedback').style.color="orange"; playSound('wrong'); }
+        setTimeout(()=>{ document.getElementById('article-check').style.display='none'; if(currentMode==='story') { if(currentQuestionIndex < storyScripts.length-1) { currentQuestionIndex++; storyLineIndex=0; document.getElementById('story-dialog-container').innerHTML=''; loadStoryDialogue(); showScreen('screen-story'); } else finishLevel(); } else { currentQuestionIndex++; loadQuestion(); } }, 2000);
+    }
+
+    function useHint() {
+        if(sessionScore < 10 && currentUser.totalScore < 10) { alert("Poin tidak cukup!"); return; }
+        const correctFirst=currentWordObj.word[0]; if(userSlots[0]===correctFirst) { alert("Sudah benar!"); return; }
+        sessionScore -= 10; document.querySelectorAll('.letter-btn').forEach(b=>b.disabled=false); userSlots.fill(null); userSlots[0]=correctFirst;
+        const btns=document.querySelectorAll('.letter-btn'); for(let btn of btns){ if(btn.innerText===correctFirst && !btn.disabled){ btn.disabled=true; btn.dataset.slotIndex=0; break;}} renderSlots();
+    }
+
+    function finishLevel() {
+        saveScoreToDB(sessionScore);
+        showScreen('screen-summary'); document.getElementById('summary-score').innerText = sessionScore; document.getElementById('summary-stars').innerText = sessionScore>=100?"⭐⭐⭐":(sessionScore>=50?"⭐⭐":"⭐");
+        const c=document.getElementById('summary-buttons'); c.innerHTML='';
+        const bM=document.createElement('button'); bM.className='btn btn-back'; bM.innerText="Menu Utama"; bM.onclick=()=>showScreen('screen-menu');
+        if(currentMode==='free' && currentLevel<3 && currentUser.unlockedLevel > currentLevel) { const bN=document.createElement('button'); bN.className='btn btn-next'; bN.innerText="Lanjut Level "+(currentLevel+1); bN.onclick=()=>{ playSound('click'); startFreeMode(currentLevel+1); }; c.appendChild(bN); }
+        c.appendChild(bM);
+    }
+
+    function shuffleArray(arr) { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+    // --- INIT ---
+    checkSession();
+</script>
+
+</body>
+</html>
